@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adivina Dónde - Scotiabank</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main>
+        <!-- Pantalla de Inicio -->
+        <div id="start-screen" class="screen active">
+            <img src="assets/logo.png" alt="Logo Scotiabank" class="logo">
+            <h1>Adivina Dónde</h1>
+            <p>Encuentra la carta con el logo de Scotiabank.</p>
+            <button id="start-button">Iniciar Juego</button>
+        </div>
+
+        <!-- Pantalla de Juego -->
+        <div id="game-screen" class="screen">
+            <header>
+                <div class="info-display">
+                    <span>Nivel: <span id="level-display">1</span>/5</span>
+                </div>
+                <div class="info-display">
+                    <span>Tiempo: <span id="time-display">60</span>s</span>
+                </div>
+            </header>
+            <div id="game-board"></div>
+            <p id="message-area"></p>
+        </div>
+
+        <!-- Pantalla Final -->
+        <div id="end-screen" class="screen">
+            <h2 id="end-title">¡Se acabó el tiempo!</h2>
+            <p id="end-message"></p>
+            <button id="restart-button">Jugar de Nuevo</button>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
