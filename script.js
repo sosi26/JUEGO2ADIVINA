@@ -9,22 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const levelDisplay = document.getElementById('level-display');
     const timeDisplay = document.getElementById('time-display');
-    const scoreDisplay = document.getElementById('score-display'); // New
+    const scoreDisplay = document.getElementById('score-display');
     const gameBoard = document.getElementById('game-board');
     const messageArea = document.getElementById('message-area');
 
     const endTitle = document.getElementById('end-title');
     const endMessage = document.getElementById('end-message');
-
-    // --- Phase 2: Sound Effects ---
-    // IMPORTANT: User must provide these audio files in the 'assets' folder
-    const sounds = {
-        click: new Audio('assets/click.mp3'),
-        shuffle: new Audio('assets/shuffle.mp3'),
-        winLevel: new Audio('assets/winLevel.mp3'),
-        winGame: new Audio('assets/winGame.mp3'),
-        lose: new Audio('assets/lose.mp3'),
-    };
 
     // --- Phase 2: Financial Tips ---
     const financialTips = {
@@ -48,8 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Game State ---
     let currentLevel = 1;
     let timeLeft = TOTAL_TIME;
-    let score = 0; // New
-    let levelStartTime = 0; // New
+    let score = 0;
+    let levelStartTime = 0;
     let timerInterval = null;
     let isGameActive = false;
 
@@ -61,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function startGame() {
         currentLevel = 1;
         timeLeft = TOTAL_TIME;
-        score = 0; // New
+        score = 0;
         isGameActive = true;
 
         startScreen.classList.remove('active');
@@ -80,7 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
             timeLeft--;
             updateTimerDisplay();
             if (timeLeft <= 0) {
-                sounds.lose.play();
                 endGame(false, '¡Se acabó el tiempo!');
             }
         }, 1000);
@@ -90,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         timeDisplay.textContent = timeLeft;
     }
 
-    function updateScoreDisplay() { // New
+    function updateScoreDisplay() {
         scoreDisplay.textContent = score;
     }
 
@@ -101,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameBoard.innerHTML = '';
         gameBoard.style.pointerEvents = 'none';
         messageArea.textContent = 'Memoriza la posición...';
-        levelStartTime = Date.now(); // New
+        levelStartTime = Date.now();
 
         const config = LEVEL_CONFIG[level];
         const winnerIndex = Math.floor(Math.random() * config.cards);
@@ -113,7 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             if (!isGameActive) return;
             messageArea.textContent = '¡Barajando!';
-            sounds.shuffle.play();
             shuffleCards();
         }, 2000);
     }
@@ -153,13 +141,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isGameActive) return;
 
         const clickedCard = e.currentTarget;
-        sounds.click.play();
         gameBoard.style.pointerEvents = 'none';
         clickedCard.classList.add('flipped');
 
         if (clickedCard.dataset.isWinner === 'true') {
             // --- Correct selection (Phase 2 logic) ---
-            sounds.winLevel.play();
             const timeTaken = (Date.now() - levelStartTime) / 1000; // seconds
             const pointsGained = Math.max(10, Math.round(100 - (timeTaken * 5)));
             score += pointsGained;
@@ -172,7 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => {
                     currentLevel++;
                     if (currentLevel > Object.keys(LEVEL_CONFIG).length) {
-                        sounds.winGame.play();
                         endGame(true);
                     } else {
                         loadLevel(currentLevel);
@@ -182,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } else {
             // --- Incorrect selection ---
-            sounds.lose.play();
             messageArea.textContent = 'Incorrecto...';
             endGame(false, '¡Esa no era la carta!');
         }
