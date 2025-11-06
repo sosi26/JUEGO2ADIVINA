@@ -9,11 +9,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const levelDisplay = document.getElementById('level-display');
     const timeDisplay = document.getElementById('time-display');
+    const scoreDisplay = document.getElementById('score-display'); // New
     const gameBoard = document.getElementById('game-board');
     const messageArea = document.getElementById('message-area');
 
     const endTitle = document.getElementById('end-title');
     const endMessage = document.getElementById('end-message');
+
+    // --- Phase 2: Sound Effects ---
+    // IMPORTANT: User must provide these audio files in the 'assets' folder
+    const sounds = {
+        click: new Audio('assets/click.mp3'),
+        shuffle: new Audio('assets/shuffle.mp3'),
+        winLevel: new Audio('assets/winLevel.mp3'),
+        winGame: new Audio('assets/winGame.mp3'),
+        lose: new Audio('assets/lose.mp3'),
+    };
+
+    // --- Phase 2: Financial Tips ---
+    const financialTips = {
+        1: "Tip: ¡Ahorrar una pequeña parte de tus ingresos cada mes puede hacer una gran diferencia a largo plazo!",
+        2: "Tip: Crear un presupuesto te ayuda a entender a dónde va tu dinero y a controlar tus gastos.",
+        3: "Tip: Evita las compras impulsivas. Espera 24 horas antes de hacer una compra no planificada.",
+        4: "Tip: Entender la diferencia entre 'necesidad' y 'deseo' es clave para la salud financiera.",
+        5: "¡Felicidades! Has demostrado una gran habilidad. ¡Sigue así con tus finanzas!"
+    };
 
     // --- Game Configuration ---
     const LEVEL_CONFIG = {
@@ -28,6 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Game State ---
     let currentLevel = 1;
     let timeLeft = TOTAL_TIME;
+    let score = 0; // New
+    let levelStartTime = 0; // New
     let timerInterval = null;
     let isGameActive = false;
 
@@ -39,12 +61,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function startGame() {
         currentLevel = 1;
         timeLeft = TOTAL_TIME;
+        score = 0; // New
         isGameActive = true;
 
         startScreen.classList.remove('active');
         endScreen.classList.remove('active');
         gameScreen.classList.add('active');
 
+        updateScoreDisplay();
         updateTimerDisplay();
         startTimer();
         loadLevel(currentLevel);
@@ -56,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
             timeLeft--;
             updateTimerDisplay();
             if (timeLeft <= 0) {
+                sounds.lose.play();
                 endGame(false, '¡Se acabó el tiempo!');
             }
         }, 1000);
@@ -65,13 +90,18 @@ document.addEventListener('DOMContentLoaded', () => {
         timeDisplay.textContent = timeLeft;
     }
 
+    function updateScoreDisplay() { // New
+        scoreDisplay.textContent = score;
+    }
+
     function loadLevel(level) {
         if (!isGameActive) return;
 
         levelDisplay.textContent = level;
         gameBoard.innerHTML = '';
-        gameBoard.style.pointerEvents = 'none'; // Disable clicks during setup
+        gameBoard.style.pointerEvents = 'none';
         messageArea.textContent = 'Memoriza la posición...';
+        levelStartTime = Date.now(); // New
 
         const config = LEVEL_CONFIG[level];
         const winnerIndex = Math.floor(Math.random() * config.cards);
@@ -80,12 +110,12 @@ document.addEventListener('DOMContentLoaded', () => {
             createCard(i === winnerIndex);
         }
 
-        // Briefly show the winning card
         setTimeout(() => {
             if (!isGameActive) return;
             messageArea.textContent = '¡Barajando!';
+            sounds.shuffle.play();
             shuffleCards();
-        }, 2000); // Show for 2 seconds
+        }, 2000);
     }
 
     function createCard(isWinner) {
@@ -103,45 +133,56 @@ document.addEventListener('DOMContentLoaded', () => {
         card.addEventListener('click', handleCardClick);
         gameBoard.appendChild(card);
         
-        // Flip to show content initially
         setTimeout(() => card.classList.add('flipped'), 100);
     }
 
     function shuffleCards() {
         const cards = Array.from(gameBoard.children);
-        // Flip all cards back
         cards.forEach(card => card.classList.remove('flipped'));
 
         setTimeout(() => {
-            // Simple shuffle: re-append in random order
             cards.sort(() => Math.random() - 0.5);
             cards.forEach(card => gameBoard.appendChild(card));
             
             messageArea.textContent = '¡Encuentra el logo!';
-            gameBoard.style.pointerEvents = 'auto'; // Enable clicks
-        }, 800); // Wait for flip animation to finish
+            gameBoard.style.pointerEvents = 'auto';
+        }, 800);
     }
 
     function handleCardClick(e) {
         if (!isGameActive) return;
 
         const clickedCard = e.currentTarget;
-        gameBoard.style.pointerEvents = 'none'; // Prevent multiple clicks
+        sounds.click.play();
+        gameBoard.style.pointerEvents = 'none';
         clickedCard.classList.add('flipped');
 
         if (clickedCard.dataset.isWinner === 'true') {
-            // Correct selection
-            messageArea.textContent = '¡Correcto!';
+            // --- Correct selection (Phase 2 logic) ---
+            sounds.winLevel.play();
+            const timeTaken = (Date.now() - levelStartTime) / 1000; // seconds
+            const pointsGained = Math.max(10, Math.round(100 - (timeTaken * 5)));
+            score += pointsGained;
+            updateScoreDisplay();
+
+            messageArea.textContent = `¡Correcto! +${pointsGained} puntos`;
+
             setTimeout(() => {
-                currentLevel++;
-                if (currentLevel > Object.keys(LEVEL_CONFIG).length) {
-                    endGame(true);
-                } else {
-                    loadLevel(currentLevel);
-                }
-            }, 1500);
+                messageArea.textContent = financialTips[currentLevel];
+                setTimeout(() => {
+                    currentLevel++;
+                    if (currentLevel > Object.keys(LEVEL_CONFIG).length) {
+                        sounds.winGame.play();
+                        endGame(true);
+                    } else {
+                        loadLevel(currentLevel);
+                    }
+                }, 3000); // Show tip for 3 seconds
+            }, 1500); // Show points for 1.5 seconds
+
         } else {
-            // Incorrect selection
+            // --- Incorrect selection ---
+            sounds.lose.play();
             messageArea.textContent = 'Incorrecto...';
             endGame(false, '¡Esa no era la carta!');
         }
@@ -153,15 +194,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isVictory) {
             endTitle.textContent = '¡FELICIDADES, GANASTE!';
-            endMessage.textContent = `Completaste los 5 niveles.`;
+            endMessage.textContent = `Tu puntuación final es: ${score}`;
         } else {
             endTitle.textContent = 'Juego Terminado';
-            endMessage.textContent = message;
+            endMessage.textContent = `${message} Tu puntuación fue: ${score}`;
         }
 
         setTimeout(() => {
             gameScreen.classList.remove('active');
             endScreen.classList.add('active');
-        }, 2000);
+        }, 2500);
     }
 });
